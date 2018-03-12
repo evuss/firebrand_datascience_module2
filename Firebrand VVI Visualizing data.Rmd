@@ -1,0 +1,77 @@
+---
+title: "Visualizing data"
+output: html_notebook
+---
+
+32.1.1 Exercise
+Plot the iris dataset with Sepal.Width and Sepal.Length as the axes;
+Try out some of the aesthetics used to see if there’s any clusters in the data;
+Try out some of the aesthetics used to see if there’s any overplotting issues.
+
+
+```{r}
+ggplot(data = iris, aes(x=Sepal.Length, y=Sepal.Width))+geom_point()
+
+ggplot(data = iris, aes(Sepal.Length, Sepal.Width, colour=Species))+geom_point()
+
+ggplot(data = iris, aes(Sepal.Length, Sepal.Width, colour=Species))+geom_point(alpha=0.7)
+
+```
+32.2.1 Exercises
+Produce a bar chart showing the max y value for each dataset in the datasaurus_dozen.
+
+```{r}
+ggplot(data = datasaurus_dozen, aes(x=rownames(datasaurus_dozen, y=)))+geom_bar()
+
+ggplot(data = mtcars, aes(x = rownames(mtcars), y = mpg, colour = as.factor(am))) + 
+    geom_col()
+
+datasaurus_dozen %>%
+    group_by(dataset) %>%
+    summarise(y=max(y)) %>%
+    ggplot(aes(x=dataset, y=y)) 
+    + geom_col() 
+    + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  
+```
+#Density
+
+```{r}
+ggplot(data = mtcars, aes(x = wt)) + geom_histogram()
+ggplot(data = mtcars, aes(x = wt)) + geom_density()
+
+ggplot(data = mtcars, aes(x = as.factor(am), y = wt)) + geom_violin()
+
+ggplot(data = mtcars, aes(x = wt, mpg)) + geom_bin2d()
+```
+
+33.0.1 Exercises
+Build a density chart of your dd_sample using geom_density(), use the sorts of aesthetics values we’ve already used to make this a density by dataset.
+
+```{r}
+ggplot(data = dd_sample, aes())
+```
+#Facetting
+Divide plots by grouping in the data by using facet_wrap. In the facet_wrap, there are multiple inputs in the facet_wrap. 
+
+```{r}
+ggplot(data = datasaurus_dozen, aes(x = x, y = y)) + geom_point() + facet_wrap(~dataset)
+```
+34.3 Exercises
+Produce a facetted scatter plot for simpsons_paradox split by dataset.
+```{r}
+ggplot(data = simpsons_paradox, aes(x = x, y = y)) + geom_point() + facet_wrap(~dataset)
+
+```
+#Themes
+Use some of the theme_xx or using 
+
+```{r}
+ggplot(data = mtcars, aes(x = cyl, y = wt, group = am, fill = am)) + geom_col() + 
+    theme_dark()
+
+ggplot(data = mtcars, aes(x = cyl, y = wt, group = am, fill = am)) + geom_col() + 
+    ggthemes::theme_fivethirtyeight()
+
+```
+

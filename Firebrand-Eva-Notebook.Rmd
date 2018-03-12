@@ -18,11 +18,12 @@ output:
 - For Stephs guides, go to lockedata.co.uk/firebrandmodule2
 
 ```{r}
-install.packages('tidyverse')
+install.packages("tidyverse")
 
 ```
 
 # Multiple data sources
+
 ```{r}
 library(tidyverse)
 
@@ -56,6 +57,7 @@ predictions
 #Plot data with ggplot
 
 ```{r}
+rm()
 install.packages("datasauRus")
 library(ggplot2)
 library(datasauRus)
@@ -63,12 +65,94 @@ library(datasauRus)
 myPlot<- ggplot(datasaurus_dozen, aes(x,y)) +
            geom_point()
 myPlot
+
+ggplot(data = simpsons_paradox, aes(x = x, y = y, group = dataset),colour = dataset) + geom_line() + geom_col()
+
+ggplot(data = simpsons_paradox, aes(x = x, y = y, group = dataset, colour = dataset)) + 
+    geom_jitter(width=5)
+
+ggplot(data = simpsons_paradox, aes(x = x, group = dataset, colour = dataset)) + 
+    geom_bar()
+
+ggplot(data = mtcars, aes(x = rownames(mtcars), y = mpg, colour = as.factor(am))) + 
+    geom_col()+theme(axis.text.x = element_text(angle = 90)) 
+```
+
+Use multiple charts
+
+Some info of simpsons paradox: The Paradox is named after the statistician who discovered something unusual in the 1960s. It’s a great example of how stats can be wrong. The paradox is that averages can be silly and misleading. Sometimes they can be just plain baffling. (from http://www.statisticshowto.com/what-is-simpsons-paradox/)
+
+By using %+%, we change the dataset in a model to another dataset. In the below example we change out dataset to simpson_paradox dataset in the model myPlot. 
+
+```{r}
+myPlot + facet_wrap(~dataset)
+
+myPlot %+% simpsons_paradox
 ```
 
 
 ```{r}
 library("tidyverse")
 tidyverse_packages()
+```
+
+
+# Change from R to Python in the notebook 
+This is an example of using python inside R studio. 
+
+```{python}
+import io
+print("hello")
+```
+# Data types and basic operations
+
+Basic sequence	:	1:3 = 1, 2, 3
+Integer division	%/%	9 %/% 4 = 2
+Modulus	%%	9 %% 4 = 1
+
+If you’re comparing decimal values that result from calculations it is better to use the all.equal() function. all.equal() adds a tolerance to the comparison which means the very subtle imprecision is ignored. The default tolerance is 1.5 × 10^8. 
+
+
+```{r}
+1:3
+9 %/% 4
+9 %% 4
+```
+# LOGIC & Common operations
+The ampersand (&) allows us to combine two checks to do an AND check, which is “are both things true?”.
+
+The pipe, or bar (|) allows us to do an OR check, which is “are either of these things true?”.
+
+The exclamation point (!) allows us to a perform a NOT check, by negating or swapping a check’s result. This allows you say things like “is this check true and that check not true?”.
+
+```{r}
+(2 < 3) & (4 == 4)
+(2 < 3) & (4 != 4)
+(2 < 3) | (4 == 4)
+(2 < 3) | (4 != 4)
+
+TRUE & TRUE
+TRUE & !FALSE
+!FALSE & !FALSE
+(2 < 3) & (4 == 4)
+(2 < 3) & !(4 != 4)
+
+
+
+```
+What is the result of pi^2?
+Is pi greater than 3?
+Construct a statement to check if 5 is both greater than 3 and less than or equal to 6
+What are the results if you check to see if a sequence of 1 to 5 is less than or equal to 3?
+
+```{r}
+pi^2
+pi>3
+
+( 5>3 ) & (5<=6)
+
+(1:5)<=3
+
 ```
 
 # Vectors
@@ -87,7 +171,7 @@ about
 ```
 
 
-Extracting values uses a grid system
+#Extracting values uses a grid system
 - Recieving the first value in the vector, use for example colours[1] for extracting the first value
 - All except the first value in the vector, use colours[-1]
 - runif() 
@@ -102,20 +186,46 @@ colours[runif(n=2, min=1, max=3)] #random no from the uniform distr
 multcolours = c(colours,colours2)
 multcolours
 multcolours[runif(n=2, min=1, max=5)]
-rm(colors,colors2)
+
+```
+#Vector handles 
+Element-wise or pair-wise calculation methodology.
+
+```{r}
+vecA <- 1:2
+vecA
+vecB <- 2:3
+vecB
+vecA*vecB
 ```
 
+# Data frames
 
-This is an example of using python inside R studio. 
+```{r}
+baddf <- data.frame(a = 1:2,
+                   b = c("blue","red"),
+                   row.names = c("First","Second"))
 
-```{python}
-import io
-print("hello")
+gooddf <- data.frame(a = 1:2,
+                   b = c("blue","red"),
+                   ID = c("First","Second"))
+View(iris)
+class(iris)
+
+mydf <- data.frame(a = 1:2, 
+                   b = c("blue","red"), 
+                   row.names = c("First","Second"))
+
+names(mydf)
+colnames(mydf)
+rownames(mydf)
+
+mylist <- list(a = 1:3, LETTERS)
+mylist
 ```
+#Working with functions
+Examine the function by writing it without the brackets
+```{r}
+Sys.Date
 
-
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
-
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
-
-The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+```
