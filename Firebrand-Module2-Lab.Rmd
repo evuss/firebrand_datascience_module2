@@ -16,5 +16,43 @@ install.packages(c("xray","skimr","visdat","GGally"))
 skimr::skim(StackOverflowSurvey)
 
 ```
-#Exploration of IBM HR Survey
+#Exploration and manipulation of IBM HR Survey
+```{r}
+runIEDA()
+skimr::skim(IBMSurvey)
+xray::anomalies(IBMSurvey)
+```
+#Exploration and manipulation of Stack Overflow Developer Survey 2017
 
+Common things to explore/check for:
+Unusual distributions
+Outliers
+Missings
+Correlations
+```{r}
+
+library(assertive)
+library()
+runIEDA() # good tool for understanding the data
+skimr::skim(StackOverflowSurvey) #
+xray::anomalies(StackOverflowSurvey) #show some variables that probably don't fit in the model
+# ExCoder10Years, ExCoderNotForMe, ExCoderWillNotCode, ExCoderReturn, ExCoderBalance, ExCoderBelonged, ExCoderActive, ExCoderSkills, YearsCodedJobPast, MobileDeveloperType, ExpectedSalary, TimeAfterBootcamp, NonDeveloper
+xray::distributions(StackOverflowSurvey)
+
+StackOverflowSurvey %>% select(-ExCoder10Years,-ExCoderNotForMe, -ExCoderWillNotCode, -ExCoderReturn, -ExCoderBalance, -ExCoderBelonged, -ExCoderActive, -ExCoderSkills, -YearsCodedJobPast, -MobileDeveloperType, -ExpectedSalary, -TimeAfterBootcamp, -NonDeveloperType)
+
+```
+#Exploration and manipulation of Ecommerce
+```{r}
+library(tidyverse)
+runIEDA()
+
+#"ecommerce" %>%
+#  read.csv(progress=FALSE)%>%
+ Ecommerce %>%
+   mutate(Description=str_remove_all(Description,"[^[:alnum:]]")) %>%
+   skimr::skim()
+ 
+skimr::skim(Ecommerce)
+xray::anomalies(Ecommerce)
+```
