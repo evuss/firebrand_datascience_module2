@@ -32,7 +32,7 @@ ibm_split %>%
   training() -> ibm_train
 
 ibm_split %>% 
-  training() -> ibm_train
+  testing() -> ibm_test
 
 ```
 # Manipulation Data
