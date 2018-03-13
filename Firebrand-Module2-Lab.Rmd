@@ -1,12 +1,11 @@
 ---
-title: "Lab Firebrand Module 2"
+title: "Lab Firebrand Module 2 Stack Overflow Dataset to predict Salary"
 output: html_notebook
 ---
 
 First, import the three datasets downloaded from kaggle;
-IBM HR Analytics Employee Attrition & Performance
 Stack Overflow Developer Survey, 2017
-E-Commerce Data
+!!log of income
 ```{r}
 #good tools 
 devtools::install_github("krupanss/IEDA") # an interactive IDE to explore data
@@ -16,12 +15,7 @@ install.packages(c("xray","skimr","visdat","GGally"))
 skimr::skim(StackOverflowSurvey)
 
 ```
-#Exploration and manipulation of IBM HR Survey
-```{r}
-runIEDA()
-skimr::skim(IBMSurvey)
-xray::anomalies(IBMSurvey)
-```
+
 #Exploration and manipulation of Stack Overflow Developer Survey 2017
 
 Common things to explore/check for:
@@ -35,13 +29,18 @@ Initial investigation
 ```{r}
 
 library(assertive)
-library()
 library(DataExplorer)
+library(rsample) # makes us do samples of our data, by using training() and testing()
+library(recipes)
+
 runIEDA() # good tool for understanding the data
 skimr::skim(StackOverflowSurvey) #
 xray::anomalies(StackOverflowSurvey) #show some variables that probably don't fit in the model
 # ExCoder10Years, ExCoderNotForMe, ExCoderWillNotCode, ExCoderReturn, ExCoderBalance, ExCoderBelonged, ExCoderActive, ExCoderSkills, YearsCodedJobPast, MobileDeveloperType, ExpectedSalary, TimeAfterBootcamp, NonDeveloper
 xray::distributions(StackOverflowSurvey)
+
+StackOverflowSurvey %>%
+  
 
 StackOverflowSurvey %>% select(-ExCoder10Years,-ExCoderNotForMe, -ExCoderWillNotCode, -ExCoderReturn, -ExCoderBalance, -ExCoderBelonged, -ExCoderActive, -ExCoderSkills, -YearsCodedJobPast, -MobileDeveloperType, -ExpectedSalary, -TimeAfterBootcamp, -NonDeveloperType)
 

@@ -268,9 +268,10 @@ alz_train_p %>%
   alz_glm_full
 ```
 
-#Evaluate model
+#Evaluate and score model
 Show the fit of the built model and the evaluating values. 
 ```{r}
+rm(View)
 library(broom)
 library(yardstick)
 library(modelr)
@@ -285,6 +286,12 @@ alz_glm_full %>%
   broom::augment()%>%
   View()
 
+alz_test_p %>% 
+  modelr::add_predictions(alz_glm_full) %>% 
+  mutate(class=factor(ifelse(pred>=0,"Control", "Impaired"),levels=c("Impaired","Control")))->
+  alz_test_scored 
+
+alz_test_scored %>% View()
 
 ```
 

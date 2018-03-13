@@ -1,0 +1,56 @@
+---
+title: "Firebrand Data Science project IBM Attrition"
+output: html_notebook
+---
+
+Initial exploration of data
+
+```{r}
+library(DataExplorer)
+IBMSurvey
+DataExplorer::create_report(IBMSurvey, output_file = "IBM.html")
+
+#Lots of variables that needs to be transformed to factors
+
+IBMSurvey %>% 
+  mutate_if(~is.numeric(.)&n_distinct(.)<7, factor) %>% 
+  mutate_if(is.character,factor) ->IBMSurvey
+  
+
+
+```
+# Split data
+```{r}
+library(rsample) # makes us do samples of our data, by using training() and testing()
+library(recipes)
+
+IBMSurvey %>%
+initial_split(prop = .9) ->
+ibm_split
+
+ibm_split %>% 
+  training() -> ibm_train
+
+ibm_split %>% 
+  training() -> ibm_train
+
+```
+# Manipulation Data
+```{r}
+#Scaling/basics process
+ibm_train %>%
+  recipe(MonthlyIncome ~ ., .) %>% 
+  step_center(all_numeric()) %>% 
+  step_scale(all_numeric()) %>%
+  prep(training=ibm_train) ->
+  ibm_preprocess # save as preprocessing step that we then can use for baking purposes
+
+ibm_preprocess %>% 
+  bake(ibm_train) -> ibm_train_prepr
+```
+#Modelling
+```{r}
+
+```
+
+
