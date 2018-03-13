@@ -197,7 +197,9 @@ alzheimers %>%
 
 alzheimers %>%
   mutate(male=factor(male),
-  Genotype = fct_infreq(fct_lump(Genotype,n=3))) %>%# now we can combine three of the Genotypes into one by using lump. the n  is the one we don't want to lump, aka the ones not in the first 3. by using the fct_infreq, we use the default variable value as the most common one, otherwise the default will be the one first in the alphabet. 
+  Genotype = fct_infreq(fct_lump(Genotype,n=3))) -> alzheimers
+
+# now we can combine three of the Genotypes into one by using lump. the n  is the one we don't want to lump, aka the ones not in the first 3. by using the fct_infreq, we use the default variable value as the most common one, otherwise the default will be the one first in the alphabet. 
   count(Genotype)
 ```
 #Sampling
@@ -224,20 +226,65 @@ alz_split %>%
 ```
 
 #Data manipulation
-By using recipe, we make sure the preprocessing manipulation steps works for future data. Look into the step_ functions in the recipe package to get help in preprocessing. 
+By using recipe package, we make sure the preprocessing manipulation steps works for future data. Look into the step_ functions in the recipe package to get help in preprocessing. There are steps for handling missing values, removing columns and much more. 
 ```{r}
-# don't touch the variable diagnosis, since it's the one we want to predict. this will be saved so that no other recipes over-write it. 
+#construct a recipe by adding ingredients in certain order before we go into baking
+
+#Scaling/basics process
 alz_train %>%
-  recipe(diagnosis ~ .) -> 
+  recipe(diagnosis ~ ., .) %>% # don't touch the variable diagnosis, since it's the one we want to predict. this will be saved so that no other recipes over-write it. 
+  step_center(all_numeric()) %>% # take all num predicting variables into the preprocessing
+  step_scale(all_numeric()) %>%
+  prep(training=alz_train) ->
+  alz_preprocess # save as preprocessing step that we then can use for baking purposes
+  
+# Feature reduction
+alz_preprocess %>%
+  step_corr(all_numeric()) %>% #remove correlated predictor variables, and will keep the one that are most independent in comparision to all the other variables in the model. 
+  step_nzv(all_predictors()) %>%
+  step_zv(all_predictors()) %>%
+  step_pca(all_numeric()) %>%
+  prep(training=alz_train) ->
   alz_preprocess
+  
+alz_preprocess %>%
+  bake(alz_train) ->
+  alz_train_p
 
 alz_preprocess %>%
-  step_center(all_predictors()) %>%
-  step_scale(all_predictors()) ->
-  alz_preprocess_scale # save as separate to be able to test your model with different preprocessing
-alz_preprocess # to look at what the preprocessing step is doing
+  bake(alz_test) ->
+  alz_test_p
 
-prep(alz_preprocess_scale, training=alz_train)
+alz_preprocess
+
+```
+#Modelling
+Begin classification model
+
+```{r}
+rm("diagnosis")
+alz_train_p %>%
+  glm(diagnosis~., data=., family="binomial") -> #tell the glm that we are using all variable by using ~. remember to tell glm what distribution family we should run by
+  alz_glm_full
+```
+
+#Evaluate model
+Show the fit of the built model and the evaluating values. 
+```{r}
+library(broom)
+library(yardstick)
+library(modelr)
+
+alz_glm_full %>%
+  broom::glance() #show us the measure of fit as a table 
+
+alz_glm_full %>%
+  broom::tidy() #show us the output of the model (estimate, std.error, statistic, p-values)
+
+alz_glm_full %>%
+  broom::augment()%>%
+  View()
+
 
 ```
 
