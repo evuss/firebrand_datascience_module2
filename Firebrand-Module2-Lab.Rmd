@@ -33,6 +33,7 @@ Correlations
 
 library(assertive)
 library()
+library(DataExplorer)
 runIEDA() # good tool for understanding the data
 skimr::skim(StackOverflowSurvey) #
 xray::anomalies(StackOverflowSurvey) #show some variables that probably don't fit in the model
@@ -40,6 +41,9 @@ xray::anomalies(StackOverflowSurvey) #show some variables that probably don't fi
 xray::distributions(StackOverflowSurvey)
 
 StackOverflowSurvey %>% select(-ExCoder10Years,-ExCoderNotForMe, -ExCoderWillNotCode, -ExCoderReturn, -ExCoderBalance, -ExCoderBelonged, -ExCoderActive, -ExCoderSkills, -YearsCodedJobPast, -MobileDeveloperType, -ExpectedSalary, -TimeAfterBootcamp, -NonDeveloperType)
+
+DataExplorer::creat
+
 
 ```
 #Exploration and manipulation of Ecommerce

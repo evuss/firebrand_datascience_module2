@@ -1,0 +1,165 @@
+---
+title: "Data Science Essentials"
+output: html_notebook
+---
+
+#Probability and statistics in R
+Distributions with 
+```{r}
+library(foreach)
+library(tidyverse)
+n_simulations   <- 1000
+nrows           <- 5000
+sample_p        <- 0.7
+dist_mean       <- 0
+dist_sd         <- 1
+pthreshold      <- 0.05 #for p-hacking!
+
+# foreach is a tool for doing simulations
+# the .combine 
+simresult<-foreach(r=seq_len(n_simulations), .combine=c) %do% {
+my_var <- rnorm(nrows, mean=dist_mean, sd=dist_sd) #Recieve values from the norm distribution
+
+rows_in_training <- sample(1:nrows, nrows*sample_p) #Sample 0.7% of a sequence from 1 to 500
+
+training <- my_var[rows_in_training]
+testing <- my_var[-rows_in_training]
+
+sim_test <- t.test(training, testing)
+ifelse(sim_test$p.value > pthreshold, "the means are the same", "the means are not the same") 
+}
+fct_count(simresult) # fct_count builds a frequency table with n and prop as table headers that can be used to 
+
+simresult %>%
+  fct_count() %>%
+  mutate(prop=scales::percent(n/sum(n)))
+```
+
+#Simulation and hypothesis testing in R
+
+```{r}
+# Now we are changing from simulations with fixed parameters to variables to be able to see what drives the differences in the test
+library(foreach)
+library(tidyverse)
+library(parallel)
+r_simulations   <- seq_len(1)
+nrows           <- seq(5000, 200000, by=10000)
+sample_p        <- c(0.7, 0.8, 0.9)
+dist_mean       <- 0
+dist_sd         <- 1:10
+pthreshold      <- c(0.05, 0.1) #for p-hacking!
+
+# how many simulations to do?
+combos <-expand.grid(r=r_simulations
+                ,n=nrows
+                ,s=sample_p
+                ,m=dist_mean
+                ,sd=dist_sd
+                ,p=pthreshold)
+nrow(combos)
+
+# foreach is a tool for doing simulations
+# the .combine will output a vector (c)
+                #r=r_simulations
+                #,n=nrows
+                #,s=sample_p
+                #,m=dist_mean
+                #,sd=dist_sd
+                #,p=pthreshold
+                #,.combine=rbind)
+simresult<-foreach(t=1:nrow(combos), .combine = rbind) %do% {
+  df <- combos[t, ]
+  outcome_var <- rnorm(df$n, mean=df$m, sd=df$sd)
+  use_for_training <- sample(1:df$n, df$n*df$s)
+  training <-  outcome_var[use_for_training]
+  testing <-  outcome_var[-use_for_training]
+  sim_test <- t.test(training, testing)
+#my_var <- rnorm(n, mean=m, sd=sd) #Recieve values from the norm distribution
+#rows_in_training <- sample(1:n, n*s) #Sample 0.7% of a sequence from 1 to 500
+df$result <-ifelse(sim_test$p.value > df$p, "the means are the same", "the means are not the same")
+ df
+}
+
+
+#fct_count(simresult) # fct_count builds a frequency table with n and prop as table headers that can be used to 
+
+simresult %>%
+  count(result) %>%
+  mutate(prop=scales::percent(nn/sum(nn)))
+
+```
+```{r}
+# Now we are changing from simulations with fixed parameters to variables to be able to see what drives the differences in the test, and the probability to get a bad sample. 
+library(foreach)
+library(tidyverse)
+library(parallel) # detect cores on windows machines and sockets on linux machines. use all four cores 
+library(doParallel) # to be able to use %dopar%
+my_machine <- parallel::makeCluster(detectCores())
+registerDoParallel(my_machine) # when we use parallel code this is registred
+
+r_simulations   <- seq_len(100)
+nrows           <- seq(5000, 200000, by=10000)
+sample_p        <- c(0.7, 0.8, 0.9)
+dist_mean       <- 0
+dist_sd         <- 1:10
+pthreshold      <- c(0.05, 0.1) #for p-hacking!
+
+# how many simulations to do? use expand grid to get all combinations of factors
+combos <-expand.grid(r=r_simulations
+                ,n=nrows
+                ,s=sample_p
+                ,m=dist_mean
+                ,sd=dist_sd
+                ,p=pthreshold)
+nrow(combos)
+
+# foreach is a tool for doing simulations
+# the .combine will output a vector (c)
+
+simresult<-foreach(t=1:nrow(combos), .combine = rbind) %dopar% {
+  df <- combos[t, ]
+  outcome_var <- rnorm(df$n, mean=df$m, sd=df$sd)
+  use_for_training <- sample(1:df$n, df$n*df$s)
+  training <-  outcome_var[use_for_training]
+  testing <-  outcome_var[-use_for_training]
+  sim_test <- t.test(training, testing)
+  df$result <-ifelse(sim_test$p.value > df$p, "the means are the same", "the means are not the same")
+ 
+  df
+}
+
+
+#fct_count(simresult) # fct_count builds a frequency table with n and prop as table headers that can be used to 
+
+simresult %>%
+  count(result) %>%
+  mutate(prop=scales::percent(nn/sum(nn)))
+
+library(ggplot2)
+simresult %>%
+  mutate(sim=row_number()) %>%
+  gather(lever, value, -r, -sim, -result) %>% #use unpivot by gather function
+ # group_by(lever, result) %>%
+  count(lever, value, result) %>%
+  ggplot(aes(x=value, y=n, group=result, colour=result)) + 
+  geom_col() +
+  facet_wrap(~lever, scales="free")
+
+library(ggplot2)
+simresult %>%
+  mutate(sim=row_number()) %>%
+  gather(lever, value, -r, -sim, -result) %>% #use unpivot by gather function
+ # group_by(lever, result) %>%
+  count(lever, value, result) %>%
+  filter(result!="the means are the same") %>%
+  filter(lever!="m") %>%
+  #mutate(prop=scales) %>%
+  ggplot(aes(x=value, y=n, group=result)) +
+  geom_line() +
+  #scale_x_discrete() +
+  facet_wrap(~lever, scales="free") +
+  theme_minimal() +
+  geom_smooth()
+  
+```
+
