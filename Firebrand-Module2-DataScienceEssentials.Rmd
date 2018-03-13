@@ -162,4 +162,82 @@ simresult %>%
   geom_smooth()
   
 ```
+#Prediction
+Step 1: The first We try to use the DataExplorer and the AlzheimerDisease dataset in the AppliedPredictiveModeling package.
+```{r}
+library(tidyverse)
+library(AppliedPredictiveModeling)
+library(skimr)
+
+data(AlzheimerDisease) #Load data and combine the two datasets into one, and name it alzheimers
+predictors %>%
+  cbind(diagnosis) -> alzheimers
+
+DataExplorer::create_report(alzheimers, "alzheimers.html") # the full report of the dataset as a html site
+
+alzheimers %>%
+  ggplot(aes(x=Thyroid_Stimulating_Hormone)) + geom_histogram() # one variable that we inspect
+
+alzheimers %>%
+  filter(Thyroid_Stimulating_Hormone == min(Thyroid_Stimulating_Hormone)) %>% 
+  skimr::skim()# in the minimum value of this variable, do they have other values that looks weird? the skim looks at the distribution of the data we have chosen, in this case the minimum value. 
+
+```
+# Cleaning data and manupulate data
+By looking at the plots in our data exploration, we will do some manipulation and cleaning. 
+```{r}
+alzheimers %>%
+  mutate(malenew=factor(male)) %>% # first check if it works before we change the male variable to factor forever
+  count(malenew,male) 
+
+alzheimers %>%
+  mutate(male=factor(male),
+  Genotype = fct_lump(Genotype,n=3)) %>%# now we can combine three of the Genotypes into one by using lump. the n  is the one we don't want to lump, aka the ones not in the first 3. 
+  count(Genotype)
+
+alzheimers %>%
+  mutate(male=factor(male),
+  Genotype = fct_infreq(fct_lump(Genotype,n=3))) %>%# now we can combine three of the Genotypes into one by using lump. the n  is the one we don't want to lump, aka the ones not in the first 3. by using the fct_infreq, we use the default variable value as the most common one, otherwise the default will be the one first in the alphabet. 
+  count(Genotype)
+```
+#Sampling
+Now our data is in better order, so we go into sampling. We want to scale/normalize our data to be able to compare them and make sure the future models on operational data will work as intended. To avoid overfitting we must first so some
+
+```{r}
+library(rsample) # makes us do samples of our data, by using training() and testing()
+library(recipes)
+
+alzheimers %>%
+  initial_split(prop = .9) ->
+  alz_split
+
+alz_split %>%
+  training() ->
+  alz_train
+
+alz_split %>%
+  testing() -> 
+  alz_test
+  
+# We want to scale/normalize our data to be able to compare them and make sure the future models on operational data will work as intended.
+
+```
+
+#Data manipulation
+By using recipe, we make sure the preprocessing manipulation steps works for future data. Look into the step_ functions in the recipe package to get help in preprocessing. 
+```{r}
+# don't touch the variable diagnosis, since it's the one we want to predict. this will be saved so that no other recipes over-write it. 
+alz_train %>%
+  recipe(diagnosis ~ .) -> 
+  alz_preprocess
+
+alz_preprocess %>%
+  step_center(all_predictors()) %>%
+  step_scale(all_predictors()) ->
+  alz_preprocess_scale # save as separate to be able to test your model with different preprocessing
+alz_preprocess # to look at what the preprocessing step is doing
+
+prep(alz_preprocess_scale, training=alz_train)
+
+```
 

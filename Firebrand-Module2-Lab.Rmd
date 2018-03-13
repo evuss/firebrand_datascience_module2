@@ -29,6 +29,9 @@ Unusual distributions
 Outliers
 Missings
 Correlations
+
+Initial investigation
+
 ```{r}
 
 library(assertive)
@@ -42,12 +45,13 @@ xray::distributions(StackOverflowSurvey)
 
 StackOverflowSurvey %>% select(-ExCoder10Years,-ExCoderNotForMe, -ExCoderWillNotCode, -ExCoderReturn, -ExCoderBalance, -ExCoderBelonged, -ExCoderActive, -ExCoderSkills, -YearsCodedJobPast, -MobileDeveloperType, -ExpectedSalary, -TimeAfterBootcamp, -NonDeveloperType)
 
-DataExplorer::creat
+DataExplorer::create_report(StackOverflowSurvey, "StackOverflowSurvey.html")
 
-
+hist(StackOverflowSurvey$Salary)
 ```
 #Exploration and manipulation of Ecommerce
 ```{r}
+
 library(tidyverse)
 runIEDA()
 
@@ -60,3 +64,6 @@ runIEDA()
 skimr::skim(Ecommerce)
 xray::anomalies(Ecommerce)
 ```
+
+
+
