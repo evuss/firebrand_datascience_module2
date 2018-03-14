@@ -310,7 +310,7 @@ alz_test_scored %>% View()
 alz_test_scored %>% 
   yardstick::accuracy(diagnosis,class)
 
-#Make decision tree on how well our model performed
+#Make decision tree on how well our model performed, actually build multiple trees by CART, SVM etc. 
 library(FFTrees)
 alz_glm_full %>% 
   broom::augment() %>% 
