@@ -3,20 +3,41 @@ title: "Firebrand Data Science project IBM Attrition"
 output: html_notebook
 ---
 
-Initial exploration of data
-
+#Initial exploration of data
+- 
 ```{r}
+library(readr)
 library(DataExplorer)
+library(dplyr)
+library(tidyverse)
+
+IBMSurvey <- read_csv("WA_Fn-UseC_-HR-Employee-Attrition.csv")
+View(IBMSurvey)
+
 IBMSurvey
 DataExplorer::create_report(IBMSurvey, output_file = "IBM.html")
 
-#Lots of variables that needs to be transformed to factors
+#Lots of variables that needs to be transformed to factors, do this by mutate and mutate_if
+#Use fct_recode to name the factors. It is probably easier to 
 
 IBMSurvey %>% 
   mutate_if(~is.numeric(.)&n_distinct(.)<7, factor) %>% 
-  mutate_if(is.character,factor) ->IBMSurvey
-  
+  mutate_if(is.character,factor) %>% 
+  mutate(Education = fct_recode(Education,
+                                "Below College"="1",
+                                 "College"="2",
+                                "Bachelor"="3",
+                                "Master"="4",
+                                 "Doctor"="5")) -> IBMSurvey
 
+
+IBMSurvey %>% mutate()
+
+scale_recode
+  
+  scale_recode(IBMSurvey$Education)
+  IBMSurvey %>% 
+    mutate()
 
 ```
 # Split data
@@ -37,20 +58,69 @@ ibm_split %>%
 ```
 # Manipulation Data
 ```{r}
+library(recipes)
 #Scaling/basics process
 ibm_train %>%
-  recipe(MonthlyIncome ~ ., .) %>% 
-  step_center(all_numeric()) %>% 
-  step_scale(all_numeric()) %>%
-  prep(training=ibm_train) ->
+  recipe(Attrition ~ ., .) %>% 
+  step_nzv(all_predictors()) %>% #remove var that are highly sparce and unbalanced
+  #step_center(all_numeric()) %>% 
+  #step_scale(all_numeric()) %>%
+  step_corr(all_numeric(),  threshold = 0.8) %>% #remove variables highly correlated with other, keep the best one
+    prep(training=ibm_train) ->
   ibm_preprocess # save as preprocessing step that we then can use for baking purposes
 
-ibm_preprocess %>% 
+ibm_preprocess %>% #use all the preprocessing steps on the train data (we don't need this if using juice instead)
   bake(ibm_train) -> ibm_train_prepr
+ibm_train_prepr
+
+ibm_preprocess %>% #use all the preprocessing steps on the train data (we don't need this if using juice instead)
+  bake(ibm_test) -> ibm_test_prepr
+
+
 ```
 #Modelling
+We are trying to predict Attrition
 ```{r}
+library(broom) # Convert Statistical Analysis Objects into Tidy Data Frames
+library(yardstick) # A tidy tool package for quantifying how well model fits to a data set such as confusion matrces, class probability curve summaries, and regression metrics (e.g., RMSE). 
+library(modelr) # Functions for modelling that help you seamlessly integrate modelling into a pipeline of data manipulation and visualisation.
+library(optiRum)
 
+ibm_train_prepr %>%
+  glm(Attrition~., data=., family="binomial") -> #tell the glm that we are using all variable by using ~. remember to tell glm what distribution family we should run by
+  ibm_glm_full
+
+ # ibm_glm_full%>%  View() # This is the full model that can be used in broom to inspect the model. 
+
+ #show us the measure of fit as a table OBS work on the model
+ ibm_glm_full %>%
+  broom::tidy() #show us the output of the model (estimate, std.error, statistic, p-values) OBS work on the model
+
+
+ ibm_glm_full  %>%
+  broom::glance()  
+ 
+ibm_test_prepr %>% 
+  modelr::add_predictions(ibm_glm_full) %>% 
+  mutate(class=factor(ifelse(pred>=0,"Yes", "No"),levels = c("No","Yes")))->
+  ibm_test_scored 
+
+ibm_glm_full %>%
+  broom::augment()%>%
+  View()
+
+ibm_test_scored  %>% 
+  #yardstick::accuracy(Attrition,class)
+  yardstick::conf_mat(Attrition,class)
+ library(glue)
+
+
+ibm_test_scored  %>% 
+  yardstick::sens(Attrition,class) -> Sensitivity
+
+  glue("The sensitivity of the IBM data is {scales::percent(Sensitivity)} ",Sensitivity=Sensitivity)
+
+ 
 ```
 
 

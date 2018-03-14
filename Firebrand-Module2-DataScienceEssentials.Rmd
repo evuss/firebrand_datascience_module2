@@ -185,6 +185,13 @@ alzheimers %>%
 ```
 # Cleaning data and manupulate data
 By looking at the plots in our data exploration, we will do some manipulation and cleaning. 
+
+dplyr verb conventions
+- verb itself e.g. 'select()' allows you to manually write out selections
+- verb suffixed '_if' e.g. 'select_if()'you can write predicates/conditions based on the column contents
+- verb suffixed '_at'e.g. 'select_at()' you can write predicates/conditions based on the column name
+- verb suffixed '_all' e.g. 'select_all()'you apply a function to every column
+
 ```{r}
 alzheimers %>%
   mutate(malenew=factor(male)) %>% # first check if it works before we change the male variable to factor forever
@@ -201,6 +208,8 @@ alzheimers %>%
 
 # now we can combine three of the Genotypes into one by using lump. the n  is the one we don't want to lump, aka the ones not in the first 3. by using the fct_infreq, we use the default variable value as the most common one, otherwise the default will be the one first in the alphabet. 
   count(Genotype)
+  
+  
 ```
 #Sampling
 Now our data is in better order, so we go into sampling. We want to scale/normalize our data to be able to compare them and make sure the future models on operational data will work as intended. To avoid overfitting we must first so some
@@ -243,15 +252,20 @@ alz_preprocess %>%
   step_corr(all_numeric()) %>% #remove correlated predictor variables, and will keep the one that are most independent in comparision to all the other variables in the model. 
   step_nzv(all_predictors()) %>%
   step_zv(all_predictors()) %>%
+  step_upsample(diagnosis) %>% 
   step_pca(all_numeric()) %>%
-  prep(training=alz_train) ->
+  prep(training=alz_train, retain=TRUE) ->
   alz_preprocess
-  
-alz_preprocess %>%
+
+alz_preprocess %>% #use all the preprocessing steps on the train data (we don't need this if using juice instead)
   bake(alz_train) ->
   alz_train_p
 
-alz_preprocess %>%
+alz_preprocess %>% #Squeezing out some extra rows from our train data AND apply the preprocessing steps
+  juice(all_outcomes(),all_predictors())->
+  alz_train_p
+
+alz_preprocess %>% #Only use the preprocess step for the test data
   bake(alz_test) ->
   alz_test_p
 
@@ -272,9 +286,9 @@ alz_train_p %>%
 Show the fit of the built model and the evaluating values. 
 ```{r}
 rm(View)
-library(broom)
-library(yardstick)
-library(modelr)
+library(broom) # Convert Statistical Analysis Objects into Tidy Data Frames
+library(yardstick) # A tidy tool package for quantifying how well model fits to a data set such as confusion matrces, class probability curve summaries, and regression metrics (e.g., RMSE). 
+library(modelr) # Functions for modelling that help you seamlessly integrate modelling into a pipeline of data manipulation and visualisation.
 
 alz_glm_full %>%
   broom::glance() #show us the measure of fit as a table 
@@ -293,5 +307,19 @@ alz_test_p %>%
 
 alz_test_scored %>% View()
 
+alz_test_scored %>% 
+  yardstick::accuracy(diagnosis,class)
+
+#Make decision tree on how well our model performed
+library(FFTrees)
+alz_glm_full %>% 
+  broom::augment() %>% 
+  select(diagnosis:.fitted) %>% 
+  mutate(class=factor(ifelse(.fitted >=0, "Control", "Impaired"),
+                      levels = c("Impaired","Control"))) %>% 
+  mutate(correct=diagnosis==class) %>% 
+  select(-.fitted, -class) %>% 
+  FFTrees(correct~.,data=.) %>% 
+  plot()
 ```
 
